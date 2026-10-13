@@ -52,7 +52,7 @@ jobs:
     timeout-minutes: 60
     services:
       postgres:
-        image: postgres:17
+        image: postgres:16
         env:
           POSTGRES_DB: tinhub_test
           POSTGRES_USER: tin
