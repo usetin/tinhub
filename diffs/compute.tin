@@ -1,9 +1,9 @@
 package diffs
 
-import "../../tit/diff"
-import "../../tit/object"
-import "../../tit/semantic"
-import "../../tit/store"
+import "../tit/diff"
+import "../tit/object"
+import "../tit/semantic"
+import "../tit/store"
 import "fault"
 import "mint"
 import "sift"

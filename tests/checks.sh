@@ -8,7 +8,7 @@
 set -eu
 driver=$1
 compiler=$2
-root=$PWD
+root=${TIN_ROOT:?TIN_ROOT must point at a tin checkout}
 tmp=$(mktemp -d)
 . "$(dirname "$0")/lib.sh"
 cleanup() {
@@ -33,7 +33,7 @@ if ! start_redis > /dev/null 2>&1; then
 	echo "SKIP tinhub checks (no redis-server or docker for the recording)"
 	exit 0
 fi
-shop=products/tinhub/dev/shop
+shop=dev/shop
 mkdir -p "$tmp/secrets"
 sh ./tin replay key "$tmp/secrets/runner.key" > "$tmp/runner.pub"
 REDIS_ADDR=127.0.0.1:$port TIN_REPLAY_RECIPIENTS=$(cat "$tmp/runner.pub") \

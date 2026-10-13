@@ -1,6 +1,6 @@
 package packs
 
-import "../../tit/crash"
+import "../tit/crash"
 import "fault"
 import "postgres"
 import "quarry"

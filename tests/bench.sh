@@ -1,7 +1,7 @@
 #!/bin/sh
 # Benchmark history and releases (#1029) against TINHUB_TEST_DB. Usage: bench.sh TINHUB REPO_DRIVER TIT BENCH_NODE
 # COMPILER. A tinhub node takes tit's pushes and BENCH_NODE (programs/bench_node.tin: the bench routes and a worker with
-# the workers' and bench's handlers) runs the jobs. The Tin repo's bench/fib.tin is built with COMPILER and timed here
+# the workers' and bench's handlers) runs the jobs. tests/fixtures/fib.tin is built with COMPILER and timed here
 # (the median of three runs), recorded with tit bench record and committed under .bench/; the push is read into
 # bench_results with the machine's CPU and kernel, and a macOS line beside it is stored but charted on its own. A change
 # that makes fib deliberately slower (it computes fib three times) gets a failed bench check and a note on its review;
@@ -12,8 +12,9 @@ driver=$2
 tit=$3
 node=$4
 compiler=$5
-root=$(cd "$(dirname "$0")/../../.." && pwd)
-case $compiler in /*) ;; *) compiler=$root/$compiler ;; esac
+repo_root=$(cd "$(dirname "$0")/.." && pwd)
+root=${TIN_ROOT:?TIN_ROOT must point at a tin checkout}
+case $compiler in /*) ;; *) compiler=$PWD/$compiler ;; esac
 tmp=$(mktemp -d)
 pids=
 cleanup() {
@@ -100,7 +101,7 @@ kit key add "http://$hubaddr" "$code" > "$tmp/out" 2>&1 || fail "tit key add: $(
 kit init "$tmp/work" > /dev/null
 cd "$tmp/work"
 kit remote add origin "http://$hubaddr/ada/fib" > /dev/null
-cp "$root/bench/fib.tin" fib.tin
+cp "$repo_root/tests/fixtures/fib.tin" fib.tin
 kit add fib.tin
 kit commit -m "fib" > /dev/null
 base=$(timed fib.tin)
@@ -119,7 +120,7 @@ echo "PASS tinhub bench: the results pushed are read, with the CPU and kernel; m
 
 # a change made deliberately slower: fib three times
 kit switch -c slow > /dev/null
-sed 's/say.Line(fib(35))/say.Line(fib(35) + fib(35) - fib(35))/' "$root/bench/fib.tin" > fib.tin
+sed 's/say.Line(fib(35))/say.Line(fib(35) + fib(35) - fib(35))/' "$repo_root/tests/fixtures/fib.tin" > fib.tin
 grep -q 'fib(35) + fib(35)' fib.tin || fail "the slower fib"
 kit add fib.tin
 kit commit -m "fib, three times" > /dev/null

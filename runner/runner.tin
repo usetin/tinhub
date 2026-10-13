@@ -1,6 +1,6 @@
 package runner
 
-import "../../tit/object"
+import "../tit/object"
 import "../events"
 import "../packs"
 import "../repo"

@@ -15,7 +15,7 @@ hub=$1
 driver=$2
 tit=$3
 fetchload=$4
-src=${5:-$(cd "$(dirname "$0")/../../.." && pwd)}
+src=${5:-${TIN_ROOT:?TIN_ROOT must point at a tin checkout}}
 runs=${TINHUB_BENCH_RUNS:-5}
 seconds=${TINHUB_BENCH_SECONDS:-20}
 clients=${TINHUB_BENCH_CLIENTS:-6}
@@ -62,7 +62,8 @@ stop() {
 }
 # ms: milliseconds since the epoch
 ms() {
-	date +%s%3N
+	# %3N is a GNU extension (BSD date prints "…N" for it): nanoseconds, then to milliseconds
+	date +%s%N | sed 's/......$//'
 }
 # median of the numbers on stdin
 median() {
@@ -72,7 +73,7 @@ median() {
 clone() {
 	rm -rf "$2"
 	t0=$(ms)
-	(cd "$tmp" && "$tit" clone "$1" "$2" > "$2.out" 2>&1) || fail "clone $1: $(cat "$2.out")"
+	(cd "$tmp" && "$tit" clone "$1" "$2" > "$2.out" 2>&1) || fail "clone $1: $(cat "$tmp/$2.out")"
 	echo $(($(ms) - t0))
 }
 kit() {

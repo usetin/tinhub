@@ -1,6 +1,6 @@
 package bench
 
-import "../../tit/object"
+import "../tit/object"
 import "../accounts"
 import "postgres"
 import "seal"

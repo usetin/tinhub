@@ -2,7 +2,7 @@
 # (design/tinhub.md §9, deploy/RUNBOOK.md). Install as /etc/systemd/system/tinhub.service.
 [Unit]
 Description=tinhub
-Documentation=https://github.com/yasserreslan/tin/blob/main/products/tinhub/deploy/RUNBOOK.md
+Documentation=https://github.com/yasserreslan/tin/blob/main/deploy/RUNBOOK.md
 After=network-online.target postgresql.service
 Wants=network-online.target
 Requires=postgresql.service

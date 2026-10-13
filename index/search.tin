@@ -1,6 +1,6 @@
 package index
 
-import "../../tit/change"
+import "../tit/change"
 import "../accounts"
 import "anvil"
 import "argo"

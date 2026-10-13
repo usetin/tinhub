@@ -1,9 +1,9 @@
 package review
 
-import "../../tit/object"
-import "../../tit/packfile"
-import "../../tit/store"
-import "../../tit/transport"
+import "../tit/object"
+import "../tit/packfile"
+import "../tit/store"
+import "../tit/transport"
 import "../accounts"
 import "../api"
 import "../capsules"

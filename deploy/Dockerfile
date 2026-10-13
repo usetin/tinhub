@@ -1,11 +1,11 @@
 # tinhub in a container: every role in one process. Postgres runs beside it (deploy/compose.yaml), content lives in an
 # S3-compatible bucket (the TINHUB_S3_* variables), and /var/lib/tinhub is a volume for the node's cache and scratch. Build from the repository root:
-#   docker build -f products/tinhub/deploy/Dockerfile -t tinhub:dev .
+#   docker build -f deploy/Dockerfile -t tinhub:dev .
 ARG TIN_BUILDER=ghcr.io/yasserreslan/tin:0.4.0
 FROM ${TIN_BUILDER} AS build
 WORKDIR /src
 COPY . .
-RUN mkdir -p /out && tin build products/tinhub/main.tin -o /out/tinhub
+RUN mkdir -p /out && tin build main.tin -o /out/tinhub
 
 FROM debian:bookworm-slim
 # postgresql-client is for the backup and restore scripts, ca-certificates for https to the bucket; the binary is static
@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends postgresql-clie
 	&& useradd --system --uid 10001 --home-dir /var/lib/tinhub --shell /usr/sbin/nologin tinhub \
 	&& mkdir -p /var/lib/tinhub && chown tinhub /var/lib/tinhub
 COPY --from=build /out/tinhub /usr/local/bin/tinhub
-COPY products/tinhub/deploy/lib.sh products/tinhub/deploy/backup.sh products/tinhub/deploy/restore.sh /usr/local/lib/tinhub/
+COPY deploy/lib.sh deploy/backup.sh deploy/restore.sh /usr/local/lib/tinhub/
 USER 10001
 VOLUME /var/lib/tinhub
 ENV TINHUB_LISTEN=:8080 TINHUB_PACKS_DIR=/var/lib/tinhub

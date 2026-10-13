@@ -37,12 +37,13 @@ disk holds only a cache of the bucket and scratch space, so losing it loses noth
 4. **The binaries.** Build with the Tin toolchain (any machine of the same architecture):
 
    ```sh
-   bin/tinc -o tinhub products/tinhub/main.tin
-   bin/tinc -o tit products/tit/main.tin
-   install -m 0755 tinhub tit /usr/local/bin/
+   bin/tinc -o tinhub main.tin
+   install -m 0755 tinhub /usr/local/bin/
+   # tit comes from its own checkout (usetin/tit): make build there, then
+   install -m 0755 /path/to/tit/bin/tit /usr/local/bin/
    install -d /usr/local/lib/tinhub
-   install -m 0755 products/tinhub/deploy/lib.sh products/tinhub/deploy/backup.sh \
-       products/tinhub/deploy/restore.sh products/tinhub/deploy/mirror-sync.sh /usr/local/lib/tinhub/
+   install -m 0755 deploy/lib.sh deploy/backup.sh \
+       deploy/restore.sh deploy/mirror-sync.sh /usr/local/lib/tinhub/
    ```
 
 5. **Configuration.** Copy `tinhub.conf.example` to `/etc/tinhub/tinhub.conf` and set `public_url`, `s3.endpoint`,
@@ -55,7 +56,7 @@ disk holds only a cache of the bucket and scratch space, so losing it loses noth
    names the bucket) when the s3.* keys cannot read the bucket.
 
    ```sh
-   cp products/tinhub/deploy/tinhub*.service products/tinhub/deploy/tinhub*.timer /etc/systemd/system/
+   cp deploy/tinhub*.service deploy/tinhub*.timer /etc/systemd/system/
    systemctl daemon-reload
    systemctl enable --now tinhub tinhub-backup.timer
    curl -sf https://tinhub.example.org/readyz    # ready
@@ -72,9 +73,9 @@ disk holds only a cache of the bucket and scratch space, so losing it loses noth
    Repositories are made with the API as it grows; until then, as the tinhub user in `psql`:
    `INSERT INTO repos (owner_id, name, visibility, quota_bytes) SELECT owner_id, 'tin', 'public', 10737418240 FROM users WHERE email = 'you@example.org';`
 
-The container route instead: put the four secrets (`db`, `nonce`, `cookie`, `s3`) in `products/tinhub/deploy/secrets/`
-and `TINHUB_S3_ENDPOINT`, `TINHUB_S3_BUCKET` and `TINHUB_S3_ACCESS_KEY` in `products/tinhub/deploy/.env`, then
-`docker compose -f products/tinhub/deploy/compose.yaml up -d` (Postgres beside tinhub, content in the bucket, the
+The container route instead: put the four secrets (`db`, `nonce`, `cookie`, `s3`) in `deploy/secrets/`
+and `TINHUB_S3_ENDPOINT`, `TINHUB_S3_BUCKET` and `TINHUB_S3_ACCESS_KEY` in `deploy/.env`, then
+`docker compose -f deploy/compose.yaml up -d` (Postgres beside tinhub, content in the bucket, the
 node's cache on a volume).
 
 **An install that keeps packs on disk** (`packs.store = dir`, from before object storage was the default) moves with
@@ -140,4 +141,4 @@ systemctl start tinhub
 
 `tinhub check` exits 1 and names any live pack missing from the store. Its `refs` and `packs` lines are fingerprints:
 the same lines before the backup and after the restore mean the same refs and the same live packs.
-`products/tinhub/tests/backup.sh` runs this drill in CI.
+`tests/backup.sh` runs this drill in CI.

@@ -52,7 +52,7 @@ These are the verdicts on macOS with `runner.sandbox = off`; they do not depend 
 # a database the script may empty, a Redis, the runner's public key (PUT /api/v1/orgs/<org>/runner answers it)
 POSTGRES_ADDR=127.0.0.1:5432 POSTGRES_USER=... POSTGRES_PASSWORD=... POSTGRES_DATABASE=orders_demo \
 REDIS_ADDR=127.0.0.1:6379 TIN_REPLAY_RECIPIENTS=<runner public key> TIN_REPLAY_SIGNING_KEY=<64 hex digits> \
-  sh products/tinhub/dev/orders/record.sh bin/tinc /tmp/orders-spool
+  sh dev/orders/record.sh bin/tinc /tmp/orders-spool
 tit replay push /tmp/orders-spool --commit main      # from a clone of the repository holding main.tin
 ```
 
@@ -63,7 +63,7 @@ The repository's runner settings need the service's environment, though a replay
 `dump.tin` prints what a capsule recorded, call by call, with a reader's key:
 
 ```sh
-TIN_REPLAY_IDENTITY=reader.key TIN_REPLAY_SIGNERS=<signer hex> tin products/tinhub/dev/orders/dump.tin CAPSULE.tcap
+TIN_REPLAY_IDENTITY=reader.key TIN_REPLAY_SIGNERS=<signer hex> tin dev/orders/dump.tin CAPSULE.tcap
 ```
 
 ```

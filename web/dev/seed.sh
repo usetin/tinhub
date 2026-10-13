@@ -1,16 +1,18 @@
 #!/bin/sh
 # Seeds a running tinhub node with people, an org and repositories to look at in the web UI (#1081): ada (a site
 # admin) and bob, each with a key and a browser session; the org tinlang with a team; the public repository ada/tin with a
-# snapshot of this repository's tit and tinhub sources pushed in a few commits; a private repository; grants.
-# Usage: seed.sh TINHUB TIT [BASE_URL]. TINHUB runs `admin invite` with the node's configuration (the TINHUB_*
-# environment). Sessions land in $SEED_DIR (default /tmp/tinhub-seed): ada.jar and bob.jar are curl cookie jars, and
-# ada.cookie the session cookie's value, for a browser.
+# snapshot of tit's and tinhub's sources pushed in a few commits; a private repository; grants.
+# Usage: seed.sh TINHUB TIT [BASE_URL]. TIT_ROOT is a tit checkout (default ../tit) to snapshot. TINHUB runs
+# `admin invite` with the node's configuration (the TINHUB_* environment). Sessions land in $SEED_DIR (default
+# /tmp/tinhub-seed): ada.jar and bob.jar are curl cookie jars, and ada.cookie the session cookie's value, for a browser.
 set -eu
 hub=$(cd "$(dirname "$1")" && pwd)/$(basename "$1")
 tit=$(cd "$(dirname "$2")" && pwd)/$(basename "$2")
 base=${3:-${TINHUB_PUBLIC_URL:-http://127.0.0.1:8080}}
 dir=${SEED_DIR:-/tmp/tinhub-seed}
-root=$(cd "$(dirname "$0")/../../../.." && pwd)
+root=$(cd "$(dirname "$0")/../.." && pwd)
+tit_root=${TIT_ROOT:-../tit}
+tit_root=$(cd "$tit_root" && pwd)
 rm -rf "$dir"
 mkdir -p "$dir"
 export TIT_NO_PAGER=1
@@ -64,16 +66,16 @@ api ada PUT /api/v1/repos/tinlang/tinhub/teams/core '{"role":"write"}' > /dev/nu
 (cd "$dir" && as ada clone "$base/ada/tin" tin > "$dir/clone.out" 2>&1) || fail "clone: $(cat "$dir/clone.out")"
 cd "$dir/tin"
 cp "$root/README.md" README.md
-mkdir -p products
-cp -R "$root/products/tit" products/tit
+mkdir -p products/tit
+(cd "$tit_root" && git archive HEAD) | tar -x -C products/tit
 rm -rf products/tit/tests
 as ada add README.md products > /dev/null
 as ada commit -m "tit: the version control system
 
 The first snapshot of tit's sources." > /dev/null
 mkdir -p products/tinhub
-for d in accounts api web; do cp -R "$root/products/tinhub/$d" "products/tinhub/$d"; done
-cp "$root/products/tinhub/README.md" products/tinhub/README.md
+for d in accounts api web; do cp -R "$root/$d" "$d"; done
+cp "$root/README.md" README.md
 as ada add products > /dev/null
 as ada commit -m "tinhub: accounts, the API and the web pages" > /dev/null
 printf '\nSee products/tinhub for the hosting service.\n' >> README.md
@@ -116,8 +118,8 @@ as bob sync > "$dir/push.out" 2>&1 || fail "bob's second push: $(cat "$dir/push.
 cd "$dir"
 (as ada clone "$base/tinlang/tinhub" tinhub > "$dir/clone.out" 2>&1) || fail "clone tinhub: $(cat "$dir/clone.out")"
 cd "$dir/tinhub"
-cp "$root/products/tinhub/README.md" README.md
-cp "$root/products/tinhub/main.tin" main.tin
+cp "$root/README.md" README.md
+cp "$root/main.tin" main.tin
 as ada add README.md main.tin > /dev/null
 as ada commit -m "tinhub: the binary" > /dev/null
 as ada push > "$dir/push.out" 2>&1 || fail "push tinhub: $(cat "$dir/push.out")"
@@ -197,7 +199,7 @@ seed_checks() {
 		redis=127.0.0.1:$rport
 		for i in $(seq 1 50); do redis-cli -p $rport ping > /dev/null 2>&1 && break; sleep 0.1; done
 	fi
-	shop=$root/products/tinhub/dev/shop
+	shop=$root/dev/shop
 	pay_port=${SEED_PAYMENTS_PORT:-9197}
 	api ada PUT /api/v1/repos/tinlang/shop/runner "{\"entry\":\"main.tin\",\"sample\":20,\"env\":[\"PAYMENTS_URL=http://127.0.0.1:$pay_port\"]}" > /dev/null
 	push_fixes shop "$shop" "shop: checkout reads the receipt the payment service answers"
@@ -217,7 +219,7 @@ seed_orders() {
 	[ "${SEED_ORDERS:-}" = 1 ] || return 0
 	[ -n "${pub:-}" ] && [ -n "${redis:-}" ] || { echo "seed: no tinlang/orders: replay checks were skipped" >&2; return 0; }
 	[ -n "${SEED_ORDERS_PG_ADDR:-}" ] && [ -n "${SEED_ORDERS_PG_DATABASE:-}" ] || { echo "seed: no tinlang/orders: set SEED_ORDERS_PG_ADDR, _USER, _PASSWORD and _DATABASE" >&2; return 0; }
-	orders=$root/products/tinhub/dev/orders
+	orders=$root/dev/orders
 	pg="\"POSTGRES_ADDR=$SEED_ORDERS_PG_ADDR\",\"POSTGRES_USER=${SEED_ORDERS_PG_USER:-}\",\"POSTGRES_PASSWORD=${SEED_ORDERS_PG_PASSWORD:-}\",\"POSTGRES_DATABASE=$SEED_ORDERS_PG_DATABASE\""
 	api ada POST /api/v1/repos '{"owner":"tinlang","name":"orders","visibility":"private","description":"A payment service on Postgres, Redis and a rates website, its failures and the fixes tried for them"}' > /dev/null
 	# a replay never connects, but the service reads its settings before it serves

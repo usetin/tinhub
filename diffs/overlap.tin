@@ -1,6 +1,6 @@
 package diffs
 
-import "../../tit/semantic"
+import "../tit/semantic"
 import "fault"
 import "herald"
 import "postgres"

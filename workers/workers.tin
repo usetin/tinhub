@@ -1,7 +1,7 @@
 package workers
 
-import "../../tit/packfile"
-import "../../tit/store"
+import "../tit/packfile"
+import "../tit/store"
 import "../events"
 import "../packs"
 import "../repo"

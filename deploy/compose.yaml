@@ -1,6 +1,6 @@
 # tinhub and Postgres on one host, content in an S3-compatible bucket (R2 by default):
 #   TINHUB_S3_ENDPOINT=https://ACCOUNT_ID.r2.cloudflarestorage.com TINHUB_S3_BUCKET=tinhub TINHUB_S3_ACCESS_KEY=... \
-#     docker compose -f products/tinhub/deploy/compose.yaml up
+#     docker compose -f deploy/compose.yaml up
 # (or put those in a .env file beside this one). Put the secrets in ./secrets/{db,nonce,cookie,s3} first, s3 being the
 # bucket's secret access key (deploy/RUNBOOK.md). The packs volume is the node's cache and scratch space only.
 services:
@@ -18,7 +18,7 @@ services:
   tinhub:
     build:
       context: ../../..
-      dockerfile: products/tinhub/deploy/Dockerfile
+      dockerfile: deploy/Dockerfile
     depends_on:
       postgres: {condition: service_healthy}
     environment:

@@ -1,6 +1,6 @@
 package accounts
 
-import "../../tit/transport"
+import "../tit/transport"
 import "fault"
 import "herald"
 import "postgres"

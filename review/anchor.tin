@@ -1,9 +1,9 @@
 package review
 
-import "../../tit/diff"
-import "../../tit/object"
-import "../../tit/semantic"
-import "../../tit/store"
+import "../tit/diff"
+import "../tit/object"
+import "../tit/semantic"
+import "../tit/store"
 import "../events"
 import "argo"
 import "fault"

@@ -1,4 +1,4 @@
-// The API client's message tidying (web/static/js/lib/api.js). Run: node --test products/tinhub/web/test/
+// The API client's message tidying (web/static/js/lib/api.js). Run: node --test web/test/
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { tidy } from "../static/js/lib/api.js";

@@ -7,7 +7,7 @@ hub=$1
 driver=$2
 tmp=$(mktemp -d)
 pid=
-root=$(cd "$(dirname "$0")/../../.." && pwd)
+root=$(cd "$(dirname "$0")/.." && pwd)
 cleanup() {
 	[ -n "$pid" ] && kill "$pid" 2>/dev/null || true
 	rm -rf "$tmp"
@@ -82,7 +82,7 @@ code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$base/ada/tin")
 echo "PASS tinhub web: assets by build with ETag, 304 and gzip; bad paths 404"
 
 if command -v node > /dev/null 2>&1; then
-	node --test "$root"/products/tinhub/web/test/*.test.js > "$tmp/node.out" 2>&1 || { cat "$tmp/node.out"; fail "the UI's unit tests"; }
+	node --test "$root"/web/test/*.test.js > "$tmp/node.out" 2>&1 || { cat "$tmp/node.out"; fail "the UI's unit tests"; }
 	echo "PASS tinhub web: the UI's unit tests ($(sed -n 's/^# pass //p' "$tmp/node.out") passed)"
 else
 	echo "SKIP tinhub web: the UI's unit tests (no node)"

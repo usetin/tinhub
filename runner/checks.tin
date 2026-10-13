@@ -1,8 +1,8 @@
 package runner
 
-import "../../tit/change"
-import "../../tit/object"
-import "../../tit/store"
+import "../tit/change"
+import "../tit/object"
+import "../tit/store"
 import "../events"
 import "argo"
 import "fault"

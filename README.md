@@ -2,7 +2,7 @@
 
 tinhub hosts tit repositories: the tit protocol for clone, fetch and push, accounts and keys, reviews, and a JSON API,
 written in Tin and run on Linux (arm64 and x86-64). The design, with every table, key and budget, is
-[design/tinhub.md](../../design/tinhub.md); the work is milestone tinhub-backend-engine (umbrella #1030).
+[design/tinhub.md](https://github.com/usetin/docs/blob/main/design/tinhub.md); the work is milestone tinhub-backend-engine (umbrella #1030).
 
 ## Commands
 
@@ -25,7 +25,7 @@ at once are safe: they take an advisory lock and apply each migration once.
 A file of `key = value` lines (`--config`, else `$TINHUB_CONFIG`, else `/etc/tinhub/tinhub.conf`), and the
 environment: `TINHUB_` and the key in upper case with dots as underscores (`db.password` is `TINHUB_DB_PASSWORD`). A
 value `file:PATH` is read from that file, for secrets mounted as files. Every key and its default is in
-[design/tinhub.md §3](../../design/tinhub.md#3-the-binary-and-its-configuration). A node needs `secrets.nonce` and
+[design/tinhub.md §3](https://github.com/usetin/docs/blob/main/design/tinhub.md#3-the-binary-and-its-configuration). A node needs `secrets.nonce` and
 `secrets.cookie`, the same on every node, and a bucket: content lives in S3-compatible object storage (R2, S3, MinIO)
 in every deployment, one server included, and `tinhub run` stops at start when it cannot read the bucket.
 
@@ -43,7 +43,7 @@ s3.secret_key = file:/run/secrets/tinhub-s3
 packs.dir = /var/lib/tinhub
 ```
 
-For development, `products/tinhub/dev/local-s3.sh` starts a local S3-compatible store (MinIO, built from the version CI
+For development, `dev/local-s3.sh` starts a local S3-compatible store (MinIO, built from the version CI
 pins) and prints the `TINHUB_S3_*` variables, so a laptop runs tinhub on object storage the way production does.
 `packs.store = dir` keeps content on local disk at `packs.dir` instead; it is for tests and quick experiments only.
 
@@ -54,11 +54,11 @@ default), with each node's copies of what it read or wrote under `packs.dir/cach
 the state: whether a pack is pending, live or retired is its row. Refs and change versions are
 rows too, moved by compare-and-swap in one transaction per push under the repository's lock, and cached in Redis when
 `redis.addr` is set. Every `packs.sweep` the sweeps delete the packs crashed pushes left and those retired longer than
-`packs.grace`. See [design/tinhub.md §7](../../design/tinhub.md#7-the-pack-store-1011-1015).
+`packs.grace`. See [design/tinhub.md §7](https://github.com/usetin/docs/blob/main/design/tinhub.md#7-the-pack-store-1011-1015).
 
 ## Accounts and sign-in
 
-`products/tinhub/accounts` holds users, orgs, members, teams, repositories, grants, keys, invites, login requests and
+`accounts` holds users, orgs, members, teams, repositories, grants, keys, invites, login requests and
 sessions. A user's role on a repository (read, write or admin) comes from owning it, owning its org, its own grant, its
 teams' grants, and public visibility; site admins have admin everywhere. Every change to access writes an `audit_log`
 row. There are no passwords: an account gets its first key with an invite (`tinhub admin invite`, then
@@ -66,7 +66,7 @@ row. There are no passwords: an account gets its first key with an invite (`tinh
 Browser sessions live in Redis (`redis.addr`) behind a cookie signed with `secrets.cookie`. **Losing Redis, flushing it
 or changing `secrets.cookie` signs everyone out**, and they sign in again with `tit login`; nothing else is lost.
 Without `redis.addr` there are no browser sessions, and key-signed requests still work. See
-[design/tinhub.md §11](../../design/tinhub.md#11-accounts-sign-in-and-sessions-1012).
+[design/tinhub.md §11](https://github.com/usetin/docs/blob/main/design/tinhub.md#11-accounts-sign-in-and-sessions-1012).
 
 ## Deployment
 
@@ -127,7 +127,7 @@ sandbox such as macOS: the replayed program then has the host's network and file
 
 Postgres keeps outcomes only, never a request, body or effect key; the
 private key is written only into a run's sandbox directory and removed with it. See
-[design/tinhub.md §12](../../design/tinhub.md#12-the-runner-a-changes-behaviour-against-productions-requests-1028).
+[design/tinhub.md §12](https://github.com/usetin/docs/blob/main/design/tinhub.md#12-the-runner-a-changes-behaviour-against-productions-requests-1028).
 
 ## Benchmarks and releases
 
@@ -151,7 +151,7 @@ tit add .bench && tit commit --amend && tit push
 - `GET …/releases?limit=&cursor=`, `GET …/releases/<tag>`: what `tit ship` made (annotated tags), newest first, with the
   changelog's changes and whether a key registered to the tagger's account signed it (`verified`, `signed_by`).
 
-See [design/tinhub.md §13](../../design/tinhub.md#13-benchmark-history-and-releases-1029).
+See [design/tinhub.md §13](https://github.com/usetin/docs/blob/main/design/tinhub.md#13-benchmark-history-and-releases-1029).
 
 ## Notifications, webhooks and live updates
 
@@ -208,7 +208,7 @@ through the API. Under `/api/v1/repos/{owner}/{repo}`:
 - `GET reviews?state=` (`active` is every review not landed or abandoned), `GET|PUT review/settings` (`{"approvals": 1, "checks": ["ci"]}`, admin).
 
 Review events (`review.opened`, `review.voted`, `review.comment`, `review.check`, `review.landed`, `review.state`) reach
-webhooks, mail and the live websocket. See [design/tinhub.md §14](../../design/tinhub.md#14-reviews-comments-checks-and-landing-1025).
+webhooks, mail and the live websocket. See [design/tinhub.md §14](https://github.com/usetin/docs/blob/main/design/tinhub.md#14-reviews-comments-checks-and-landing-1025).
 
 ## The web UI
 
@@ -220,20 +220,20 @@ and line comments, votes and landing, checks, benchmark history, releases, repla
 and org settings, account settings and site administration. Sign-in is a key: the page shows a code, and
 `tit login <site> --code CODE` approves it. `/` (or Ctrl+K) opens a palette that jumps to a repository, page or
 command, a symbol after `#`, and on a repository's pages to a file by name (`t` opens it there too). See
-[design/tinhub.md §15](../../design/tinhub.md#15-the-web-layer-1081).
+[design/tinhub.md §15](https://github.com/usetin/docs/blob/main/design/tinhub.md#15-the-web-layer-1081).
 
-To work on the UI against a running node, set `web.dir` to `products/tinhub/web/static`: files are read from disk on
+To work on the UI against a running node, set `web.dir` to `web/static`: files are read from disk on
 every request. `web/dev/seed.sh` fills a fresh node with people, an org, repositories, a reviewed stack, benchmark
 history and a release:
 
 ```sh
-TINHUB_WEB_DIR=$PWD/products/tinhub/web/static tinhub run &
-sh products/tinhub/web/dev/seed.sh path/to/tinhub path/to/tit   # then open the URL it prints
+TINHUB_WEB_DIR=$PWD/web/static tinhub run &
+sh web/dev/seed.sh path/to/tinhub path/to/tit   # then open the URL it prints
 # with the runner on (TINHUB_RUNNER_KEY=file:KEY from `tin replay key KEY`, TINHUB_RUNNER_TIN=$PWD, and on macOS
 # TINHUB_RUNNER_SANDBOX=off), the seed also records dev/shop's failures and checks five fix branches against them;
 # SEED_ORDERS=1 with SEED_ORDERS_PG_ADDR/_USER/_PASSWORD/_DATABASE adds dev/orders (Postgres, Redis and a real website,
 # so it needs the network): three failures and eight fix branches
-node --test products/tinhub/web/test/*.test.js                 # the UI's unit tests
+node --test web/test/*.test.js                 # the UI's unit tests
 ```
 
 ## Health and shutdown
@@ -250,14 +250,14 @@ Logs are herald lines; each request's line carries `req=` (its `X-Request-Id`, e
 ## Tests
 
 ```sh
-sh products/tinhub/tests/run.sh                 # unit tests and the build, on any platform
+sh tests/run.sh                 # unit tests and the build, on any platform
 TINHUB_TEST_DB=127.0.0.1:5432/tinhub_test TINHUB_TEST_DB_USER=tin TINHUB_TEST_DB_PASSWORD=... \
-  sh products/tinhub/tests/run.sh               # plus Postgres: schema, event queue, accounts, readiness and drain
+  sh tests/run.sh               # plus Postgres: schema, event queue, accounts, readiness and drain
 ```
 
 On Linux the Postgres checks also run the runner end to end (`tests/runner.sh`: examples/checkout.tin recorded, a change
 adding a SQL query replayed in the sandbox), skipped where the sandbox cannot run (no user namespaces) or there is no
-`redis-server` or docker. They also run benchmark history end to end (`tests/bench.sh`: the Tin repo's `bench/fib.tin`
+`redis-server` or docker. They also run benchmark history end to end (`tests/bench.sh`: `tests/fixtures/fib.tin`
 timed and recorded with tit, a change made three times slower failing its check with a note, `tit ship`'s release).
 With `TINHUB_TEST_REDIS=host:port` as well, the accounts tests also check that sessions survive a restart and that a
 login code is claimed once (under a random key prefix).

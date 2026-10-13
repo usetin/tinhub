@@ -1,4 +1,4 @@
-// The formatting helpers (web/static/js/lib/format.js). Run: node --test products/tinhub/web/test/
+// The formatting helpers (web/static/js/lib/format.js). Run: node --test web/test/
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as f from "../static/js/lib/format.js";

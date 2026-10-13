@@ -1,8 +1,8 @@
 package workers
 
-import "../../tit/git"
-import "../../tit/object"
-import "../../tit/store"
+import "../tit/git"
+import "../tit/object"
+import "../tit/store"
 import "../repo"
 import "fault"
 import "postgres"

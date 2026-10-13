@@ -10,7 +10,7 @@ set -eu
 driver=$1
 probe=$2
 compiler=$3
-root=$PWD
+root=${TIN_ROOT:?TIN_ROOT must point at a tin checkout}
 tmp=$(mktemp -d)
 app=
 watcher=

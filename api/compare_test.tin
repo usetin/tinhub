@@ -1,8 +1,8 @@
 package api
 
-import "../../tit/object"
-import "../../tit/revwalk"
-import "../../tit/store"
+import "../tit/object"
+import "../tit/revwalk"
+import "../tit/store"
 import "crucible"
 
 // Tests for a compare's split point, on this history (times in brackets):

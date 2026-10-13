@@ -1,10 +1,10 @@
 package api
 
-import "../../tit/change"
-import "../../tit/diff"
-import "../../tit/object"
-import "../../tit/revwalk"
-import "../../tit/store"
+import "../tit/change"
+import "../tit/diff"
+import "../tit/object"
+import "../tit/revwalk"
+import "../tit/store"
 import "anvil"
 import "fault"
 import "twine"

@@ -1,11 +1,11 @@
 package workers
 
-import "../../tit/change"
-import "../../tit/crash"
-import "../../tit/object"
-import "../../tit/packfile"
-import "../../tit/store"
-import "../../tit/transport"
+import "../tit/change"
+import "../tit/crash"
+import "../tit/object"
+import "../tit/packfile"
+import "../tit/store"
+import "../tit/transport"
 import "../events"
 import "../packs"
 import "../repo"

@@ -1,7 +1,7 @@
 package workers
 
-import "../../tit/packfile"
-import "../../tit/transport"
+import "../tit/packfile"
+import "../tit/transport"
 import "tide"
 
 // Repack (#1007, #1014): a repository's live packs merged into one through PgRepo, as design/tit.md §16 has it: the

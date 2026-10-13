@@ -1,9 +1,9 @@
 package api
 
-import "../../tit/change"
-import "../../tit/diff"
-import "../../tit/object"
-import "../../tit/store"
+import "../tit/change"
+import "../tit/diff"
+import "../tit/object"
+import "../tit/store"
 import "../accounts"
 import "../packs"
 import "../repo"

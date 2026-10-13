@@ -1,6 +1,6 @@
 package proto
 
-import "../../tit/transport"
+import "../tit/transport"
 import "../accounts"
 import "../capsules"
 import "../packs"

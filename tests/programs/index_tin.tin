@@ -1,9 +1,9 @@
 package main
 
-import "../../../tit/object"
-import "../../../tit/packfile"
-import "../../../tit/store"
-import "../../../tit/transport"
+import "../../tit/object"
+import "../../tit/packfile"
+import "../../tit/store"
+import "../../tit/transport"
 import "../../db"
 import "../../index"
 import "../../packs"
@@ -196,8 +196,8 @@ fn run(list str, root str, dir str) ! {
 	let c1 = try commitOf(mut s, files, []object.Id{}, mut ids)
 	try push(mut r, mut s, ids, "", c1.Hex())
 	try timed(c, repoId, c1.Hex(), []str{}, "full")
-	// an edit of one package: a new function at the end of products/tinhub/events/events.tin
-	let edited = "products/tinhub/events/events.tin"
+	// an edit of one package: a new function at the end of events/events.tin
+	let edited = "events/events.tin"
 	let (body, have) = files[edited]
 	if !have {
 		fail "{edited} is not in the list"

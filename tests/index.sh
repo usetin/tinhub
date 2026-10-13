@@ -6,8 +6,9 @@ set -eu
 driver=$1
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT HUP INT TERM
-git ls-files > "$tmp/files"
-TIN_ROOT=$PWD "$driver" "$tmp/files" "$PWD" "$tmp/node" > "$tmp/out" 2>&1 || { cat "$tmp/out"; echo "FAIL tinhub index: the Tin repository"; exit 1; }
+root=${TIN_ROOT:?TIN_ROOT must point at a tin checkout}
+(cd "$root" && git ls-files) > "$tmp/files"
+TIN_ROOT=$root "$driver" "$tmp/files" "$root" "$tmp/node" > "$tmp/out" 2>&1 || { cat "$tmp/out"; echo "FAIL tinhub index: the tin repository"; exit 1; }
 grep '^full: ' "$tmp/out"
 grep '^incremental: ' "$tmp/out"
 grep -q '^incremental: .* reindexed=1 ' "$tmp/out" || { cat "$tmp/out"; echo "FAIL tinhub index: the incremental push re-indexed more than its package"; exit 1; }

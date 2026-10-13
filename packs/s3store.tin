@@ -1,6 +1,6 @@
 package packs
 
-import "../../tit/packfile"
+import "../tit/packfile"
 import "fault"
 import "quarry"
 import "s3"

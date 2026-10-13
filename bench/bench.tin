@@ -1,7 +1,7 @@
 package bench
 
-import "../../tit/object"
-import "../../tit/store"
+import "../tit/object"
+import "../tit/store"
 import "../events"
 import "../packs"
 import "../repo"
@@ -223,7 +223,7 @@ fn runJob(j events.Job) ! {
 
 // ---- results ----
 
-// machineIn and lineIn are one line of tit bench's results file (products/tit/cmd/bench.tin's Result).
+// machineIn and lineIn are one line of tit bench's results file (usetin/tit cmd/bench.tin's Result).
 type machineIn struct {
 	Os     str
 	Arch   str

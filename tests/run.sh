@@ -4,10 +4,15 @@
 # the Postgres tests run too: the schema, the event queue's processes, the repository (races, the Redis ref cache,
 # crash points), the workers' crash points, the runner's sandboxed replays (Linux) and a server's start, readiness and
 # drain.
+# TIN_ROOT is a tin checkout (default ../tin) and TIT_ROOT a tit checkout (default ../tit, for the protocol tests).
 # The test database is emptied: never point it at a database you need.
 set -eu
-cd "$(dirname "$0")/../../.." || exit 1
-compiler=${1:-bin/tinc}
+cd "$(dirname "$0")/.." || exit 1
+tin_root=${TIN_ROOT:-../tin}
+tin_root=$(cd "$tin_root" && pwd)
+compiler=${1:-$tin_root/bin/tinc}
+tin_cmd="$tin_root/tin"
+export TIN_ROOT="$tin_root"
 tmp=$(mktemp -d)
 pid=
 fake=
@@ -17,27 +22,27 @@ cleanup() {
 	rm -rf "$tmp"
 }
 trap cleanup EXIT HUP INT TERM
-# the S3 pack store's contract runs against bench/ref/s3sig's fake S3 (it checks every signature) when Go is here
-if command -v go > /dev/null 2>&1 && (cd bench/ref/s3sig && go build -o "$tmp/s3fake" ./fake) > "$tmp/go.out" 2>&1; then
+# the S3 pack store's contract runs against tests/fakes/s3sig's fake S3 (it checks every signature) when Go is here
+if command -v go > /dev/null 2>&1 && (cd tests/fakes/s3sig && go build -o "$tmp/s3fake" ./fake) > "$tmp/go.out" 2>&1; then
 	"$tmp/s3fake" tinkey 'tin/secret+key=' > "$tmp/s3fake.port" 2> "$tmp/s3fake.err" & fake=$!
 	for i in $(seq 1 100); do [ -s "$tmp/s3fake.port" ] && break; sleep 0.1; done
 	export TINHUB_TEST_S3="http://127.0.0.1:$(head -n 1 "$tmp/s3fake.port")" TINHUB_TEST_S3_KEY=tinkey TINHUB_TEST_S3_SECRET='tin/secret+key='
 else
 	echo "SKIP tinhub S3 pack store (no Go, or the fake S3 does not build)"
 fi
-for dir in products/tinhub/*/; do
+for dir in */; do
 	ls "$dir"*_test.tin >/dev/null 2>&1 || continue
-	sh ./tin test "$dir" > "$tmp/test.out" 2>&1 || { cat "$tmp/test.out"; echo "FAIL tinhub tests $dir"; exit 1; }
+	sh "$tin_cmd" test "$dir" > "$tmp/test.out" 2>&1 || { cat "$tmp/test.out"; echo "FAIL tinhub tests $dir"; exit 1; }
 	echo "PASS tinhub tests $dir"
 done
 # and against a real S3 server when one is given (CI's MinIO on Linux x86-64): TINHUB_TEST_MINIO is its endpoint, with
 # TINHUB_TEST_MINIO_KEY and TINHUB_TEST_MINIO_SECRET
 if [ -n "${TINHUB_TEST_MINIO:-}" ]; then
-	TINHUB_TEST_S3=$TINHUB_TEST_MINIO TINHUB_TEST_S3_KEY=${TINHUB_TEST_MINIO_KEY:-} TINHUB_TEST_S3_SECRET=${TINHUB_TEST_MINIO_SECRET:-} sh ./tin test products/tinhub/packs/ > "$tmp/test.out" 2>&1 || { cat "$tmp/test.out"; echo "FAIL tinhub pack store on MinIO"; exit 1; }
+	TINHUB_TEST_S3=$TINHUB_TEST_MINIO TINHUB_TEST_S3_KEY=${TINHUB_TEST_MINIO_KEY:-} TINHUB_TEST_S3_SECRET=${TINHUB_TEST_MINIO_SECRET:-} sh "$tin_cmd" test packs/ > "$tmp/test.out" 2>&1 || { cat "$tmp/test.out"; echo "FAIL tinhub pack store on MinIO"; exit 1; }
 	grep -q 'TINHUB_TEST_S3 is not set' "$tmp/test.out" && { cat "$tmp/test.out"; echo "FAIL tinhub pack store on MinIO: skipped"; exit 1; }
 	echo "PASS tinhub pack store contract on MinIO"
 fi
-TIN_ROOT=$PWD "$compiler" -o "$tmp/tinhub" products/tinhub/main.tin
+TIN_ROOT=$tin_root "$compiler" -o "$tmp/tinhub" main.tin
 "$tmp/tinhub" version > "$tmp/version.out"
 grep -q '^tinhub [0-9]' "$tmp/version.out" || { cat "$tmp/version.out"; echo "FAIL tinhub version"; exit 1; }
 echo "PASS tinhub version"
@@ -45,50 +50,51 @@ if [ -z "${TINHUB_TEST_DB:-}" ]; then
 	echo "SKIP tinhub Postgres checks (TINHUB_TEST_DB is not set)"
 	exit 0
 fi
-TIN_ROOT=$PWD "$compiler" -o "$tmp/queue_worker" products/tinhub/tests/programs/queue_worker.tin
-sh products/tinhub/tests/queue.sh "$tmp/queue_worker"
-TIN_ROOT=$PWD "$compiler" -o "$tmp/repo_driver" products/tinhub/tests/programs/repo_driver.tin
-sh products/tinhub/tests/repo.sh "$tmp/repo_driver"
-TIN_ROOT=$PWD "$compiler" -o "$tmp/tit" products/tit/main.tin 2>/dev/null
-sh products/tinhub/tests/api.sh "$tmp/tinhub" "$tmp/repo_driver" "$tmp/tit"
-sh products/tinhub/tests/signin.sh "$tmp/tinhub" "$tmp/repo_driver" "$tmp/tit"
-sh products/tinhub/tests/web.sh "$tmp/tinhub" "$tmp/repo_driver"
-sh products/tinhub/tests/backup.sh "$tmp/tinhub" "$tmp/repo_driver"
-sh products/tinhub/tests/phase2.sh "$tmp/tinhub" "$tmp/repo_driver" "$tmp/tit"
+tit_root=$(cd "${TIT_ROOT:-tit}" && pwd) || { echo "tinhub: a tit checkout is needed for the protocol tests: clone usetin/tit into tit/ or set TIT_ROOT"; exit 1; }
+TIN_ROOT=$tin_root "$compiler" -o "$tmp/queue_worker" tests/programs/queue_worker.tin
+sh tests/queue.sh "$tmp/queue_worker"
+TIN_ROOT=$tin_root "$compiler" -o "$tmp/repo_driver" tests/programs/repo_driver.tin
+sh tests/repo.sh "$tmp/repo_driver"
+TIN_ROOT=$tin_root "$compiler" -o "$tmp/tit" "$tit_root/main.tin" 2>/dev/null
+sh tests/api.sh "$tmp/tinhub" "$tmp/repo_driver" "$tmp/tit"
+sh tests/signin.sh "$tmp/tinhub" "$tmp/repo_driver" "$tmp/tit"
+sh tests/web.sh "$tmp/tinhub" "$tmp/repo_driver"
+sh tests/backup.sh "$tmp/tinhub" "$tmp/repo_driver"
+sh tests/phase2.sh "$tmp/tinhub" "$tmp/repo_driver" "$tmp/tit"
 # the Tin repo cloned and pushed through tinhub, and short clone timings; TINHUB_BENCH_RUNS, _SECONDS and _CLIENTS
 # lengthen them for the numbers in the issues (#1015, #1026)
-TIN_ROOT=$PWD "$compiler" -o "$tmp/fetch_load" products/tinhub/tests/programs/fetch_load.tin
-TINHUB_BENCH_RUNS=${TINHUB_BENCH_RUNS:-1} TINHUB_BENCH_SECONDS=${TINHUB_BENCH_SECONDS:-5} sh products/tinhub/tests/clones.sh "$tmp/tinhub" "$tmp/repo_driver" "$tmp/tit" "$tmp/fetch_load"
-TIN_ROOT=$PWD "$compiler" -o "$tmp/workers_driver" products/tinhub/tests/programs/workers_driver.tin
-sh products/tinhub/tests/workers.sh "$tmp/workers_driver"
+TIN_ROOT=$tin_root "$compiler" -o "$tmp/fetch_load" tests/programs/fetch_load.tin
+TINHUB_BENCH_RUNS=${TINHUB_BENCH_RUNS:-1} TINHUB_BENCH_SECONDS=${TINHUB_BENCH_SECONDS:-5} sh tests/clones.sh "$tmp/tinhub" "$tmp/repo_driver" "$tmp/tit" "$tmp/fetch_load"
+TIN_ROOT=$tin_root "$compiler" -o "$tmp/workers_driver" tests/programs/workers_driver.tin
+sh tests/workers.sh "$tmp/workers_driver"
 # reviews: a stack pushed over the protocol with its change versions, approved, its required check posted signed with
 # a key, and landed bottom-up on a main that moved; a conflicting landing refused (#1025)
-TIN_ROOT=$PWD "$compiler" -o "$tmp/review_node" products/tinhub/tests/programs/review_node.tin
-sh products/tinhub/tests/review.sh "$tmp/review_node" "$tmp/tit"
-# the runner: a change's build replayed in the sandbox against examples/checkout.tin's capsules (Linux; skipped without
-# user namespaces or Redis)
-TIN_ROOT=$PWD "$compiler" -o "$tmp/runner_driver" products/tinhub/tests/programs/runner_driver.tin
-TIN_ROOT=$PWD "$compiler" -o "$tmp/runner_probe" products/tinhub/tests/programs/runner_probe.tin
-sh products/tinhub/tests/runner.sh "$tmp/runner_driver" "$tmp/runner_probe" "$compiler"
+TIN_ROOT=$tin_root "$compiler" -o "$tmp/review_node" tests/programs/review_node.tin
+sh tests/review.sh "$tmp/review_node" "$tmp/tit"
+# the runner: a change's build replayed in the sandbox against the tin repository's examples/checkout.tin capsules
+# (Linux; skipped without user namespaces or Redis)
+TIN_ROOT=$tin_root "$compiler" -o "$tmp/runner_driver" tests/programs/runner_driver.tin
+TIN_ROOT=$tin_root "$compiler" -o "$tmp/runner_probe" tests/programs/runner_probe.tin
+sh tests/runner.sh "$tmp/runner_driver" "$tmp/runner_probe" "$compiler"
 # replay checks: dev/shop's fix branches built and replayed against its recorded failures, each capsule's verdict
-sh products/tinhub/tests/checks.sh "$tmp/runner_driver" "$compiler"
-# benchmark history and releases: the Tin repo's fib benchmark timed, recorded with tit bench and pushed; a change made
+sh tests/checks.sh "$tmp/runner_driver" "$compiler"
+# benchmark history and releases: tests/fixtures/fib.tin timed, recorded with tit bench and pushed; a change made
 # slower fails its check with a note on its review; tit ship's release with its verified signature (#1029)
-TIN_ROOT=$PWD "$compiler" -o "$tmp/bench_node" products/tinhub/tests/programs/bench_node.tin
-sh products/tinhub/tests/bench.sh "$tmp/tinhub" "$tmp/repo_driver" "$tmp/tit" "$tmp/bench_node" "$compiler"
-# notifications, webhooks and live updates on two nodes, against bench/ref/tinhub_hooks (Go checks the signatures)
-if command -v go > /dev/null 2>&1 && (cd bench/ref/tinhub_hooks && go build -o "$tmp/hooks" main.go) > "$tmp/go.out" 2>&1; then
-	TIN_ROOT=$PWD "$compiler" -o "$tmp/notify_node" products/tinhub/tests/programs/notify_node.tin
-	sh products/tinhub/tests/notify.sh "$tmp/notify_node" "$tmp/hooks"
+TIN_ROOT=$tin_root "$compiler" -o "$tmp/bench_node" tests/programs/bench_node.tin
+sh tests/bench.sh "$tmp/tinhub" "$tmp/repo_driver" "$tmp/tit" "$tmp/bench_node" "$compiler"
+# notifications, webhooks and live updates on two nodes, against tests/fakes/tinhub_hooks (Go checks the signatures)
+if command -v go > /dev/null 2>&1 && (cd tests/fakes/tinhub_hooks && go build -o "$tmp/hooks" main.go) > "$tmp/go.out" 2>&1; then
+	TIN_ROOT=$tin_root "$compiler" -o "$tmp/notify_node" tests/programs/notify_node.tin
+	sh tests/notify.sh "$tmp/notify_node" "$tmp/hooks"
 else
 	echo "SKIP tinhub notify (no Go, or the webhook receiver does not build)"
 fi
-# the symbol index of this repository takes about a minute: only with TINHUB_TEST_INDEX_TIN=1
+# the symbol index of the tin repository takes about a minute: only with TINHUB_TEST_INDEX_TIN=1
 if [ "${TINHUB_TEST_INDEX_TIN:-}" = 1 ]; then
-	TIN_ROOT=$PWD "$compiler" -o "$tmp/index_tin" products/tinhub/tests/programs/index_tin.tin
-	sh products/tinhub/tests/index.sh "$tmp/index_tin"
+	TIN_ROOT=$tin_root "$compiler" -o "$tmp/index_tin" tests/programs/index_tin.tin
+	sh tests/index.sh "$tmp/index_tin"
 else
-	echo "SKIP tinhub index of the Tin repository (TINHUB_TEST_INDEX_TIN is not 1)"
+	echo "SKIP tinhub index of the tin repository (TINHUB_TEST_INDEX_TIN is not 1)"
 fi
 # a server: not ready before tinhub migrate, ready after, and a request in flight at SIGTERM completes
 "$tmp/queue_worker" setup 0 > /dev/null
@@ -117,7 +123,7 @@ m1=$!
 "$tmp/tinhub" migrate > "$tmp/m2.out"
 wait $m1
 total=$(cat "$tmp/m1.out" "$tmp/m2.out" | sed -n 's/^tinhub: applied \([0-9]*\) migrations.*/\1/p' | awk '{ s += $1 } END { print s }')
-newest=$(ls products/tinhub/db/migrations/*.sql | wc -l | tr -d ' ')
+newest=$(ls db/migrations/*.sql | wc -l | tr -d ' ')
 [ "$total" = "$newest" ] || { cat "$tmp/m1.out" "$tmp/m2.out"; echo "FAIL two migrators applied $total migrations, not $newest"; exit 1; }
 "$tmp/tinhub" migrate | grep -q 'applied 0 migrations' || { echo "FAIL tinhub migrate twice"; exit 1; }
 echo "PASS tinhub migrate (concurrent, idempotent)"

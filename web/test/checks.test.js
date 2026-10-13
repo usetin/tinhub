@@ -1,4 +1,4 @@
-// Replay checks on the group page (web/static/js/ui/checks.js, lib/verdicts.js). Run: node --test products/tinhub/web/test/
+// Replay checks on the group page (web/static/js/ui/checks.js, lib/verdicts.js). Run: node --test web/test/
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";

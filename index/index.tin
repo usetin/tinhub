@@ -1,8 +1,8 @@
 package index
 
-import "../../tit/diff"
-import "../../tit/object"
-import "../../tit/store"
+import "../tit/diff"
+import "../tit/object"
+import "../tit/store"
 import "../events"
 import "../packs"
 import "../repo"

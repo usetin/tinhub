@@ -1,10 +1,10 @@
 package diffs
 
-import "../../tit/object"
-import "../../tit/packfile"
-import "../../tit/semantic"
-import "../../tit/store"
-import "../../tit/transport"
+import "../tit/object"
+import "../tit/packfile"
+import "../tit/semantic"
+import "../tit/store"
+import "../tit/transport"
 import "../db"
 import "../events"
 import "../packs"
